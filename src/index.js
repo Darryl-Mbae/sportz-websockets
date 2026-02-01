@@ -1,5 +1,5 @@
 import express from 'express';
-import { matechRouter } from './routes/matches.js';
+import { matchRouter } from './routes/matches.js';
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -12,7 +12,7 @@ app.get('/', (req, res) => {
 	res.json({ message: 'Hello from Express!' });
 });
 
-app.use('/matches',matechRouter);
+app.use('/matches',matchRouter);
 
 // Start server and log the full URL
 app.listen(port, () => {

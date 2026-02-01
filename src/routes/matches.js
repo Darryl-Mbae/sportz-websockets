@@ -5,15 +5,15 @@ import { db } from "../db/db.js";
 import { getMatchStatus } from "../utils/match-status.js";
 import { desc } from "drizzle-orm";
 
-export const matechRouter = Router();
+export const matchRouter = Router();
 
 const MAX_LIMIT = 100;
 
-matechRouter.get("/", async (req, res) => {
+matchRouter.get("/", async (req, res) => {
   const parsed = listMatchesQuerySchema.safeParse(req.query);
 
   if (!parsed.success) {
-    return res.status(400).json({ errors: 'Invalid Query Parameters', details: JSON.stringify(parsed.error) });
+    return res.status(400).json({ errors: 'Invalid Query Parameters', details: parsed.error.issues });
   }
   const limit = Math.min(parsed.data.limit ?? 50, MAX_LIMIT);
 
@@ -30,13 +30,15 @@ matechRouter.get("/", async (req, res) => {
   }
 });
 
-matechRouter.post("/", async (req, res) => {
+matchRouter.post("/", async (req, res) => {
   const parsed = createMatchSchema.safeParse(req.body);
-  const { data: { startTime, endTime, homeScore, awayScore } } = parsed;
 
   if (!parsed.success) {
-    return res.status(400).json({ errors: 'Invalid Payload', details: JSON.stringify(parsed.error) });
+    return res.status(400).json({ errors: 'Invalid Payload', details: parsed.error.issues });
   }
+
+  const { data: { startTime, endTime, homeScore, awayScore } } = parsed;
+
 
   try {
     const [event] = await db.insert(matches).values({
