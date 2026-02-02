@@ -50,6 +50,13 @@ matchRouter.post("/", async (req, res) => {
       status: getMatchStatus(startTime, endTime)
     }).returning();
 
+    if(res.app.locals.broadCastMatchCreated) {
+      res.app.locals.broadCastMatchCreated(event);
+    }
+    else{
+      console.warn("WebSocket broadcastMatchCreated function not available");
+    }
+
     res.status(201).json({ data: event });
 
   } catch (err) {
