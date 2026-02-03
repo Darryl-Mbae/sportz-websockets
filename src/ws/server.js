@@ -13,6 +13,15 @@ function sendJSON(socket, payload) {
     socket.send(JSON.stringify(payload));
 }
 
+ /**
+  * Broadcasts a JSON-serializable payload to all open clients of a WebSocketServer.
+  *
+  * The payload is serialized with JSON.stringify and sent to each client whose
+  * readyState equals WebSocket.OPEN. Non-open clients are skipped.
+  *
+  * `@param` {WebSocketServer} wss - The WebSocketServer whose connected clients will receive the payload.
+  * `@param` {*} payload - The value to serialize and send to each open client.
+  */
 function broadcast(wss, payload) {
     for (const client of wss.clients) {
         if (client.readyState !== WebSocket.OPEN) continue;
