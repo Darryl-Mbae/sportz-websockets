@@ -1,5 +1,6 @@
 import { WebSocketServer } from "ws";
 import { WebSocket } from "ws";
+import { wspArcjet } from "../arcjet.js";
 
 function sendJSON(socket, payload) {
     if (socket.readyState !== WebSocket.OPEN) return;
@@ -23,7 +24,25 @@ export function attachWebSocketServer(server) {
         maxPayload: 1024 * 1024
     });
 
-    wss.on('connection', (socket) => {
+    wss.on('connection', async (socket) => {
+
+        if(wspArcjet){
+            try{
+                const decision = await wspArcjet.protect(socket);
+
+                if (decision.isDenied) {
+                    const reason = decision.reason.isRateLimit() ? 'Rate limite exceeded' : 'Access denied';
+                    const code = decision.reason.isRateLimit() ? 1013 : 1008; // Custom close codes
+
+                    socket.close(code, reason);
+                }
+
+            }catch(err){
+                console.error("WS connection error:", err);
+                socket.close(1011, 'Server security error');
+                return;
+            }
+        }
         socket.isAlive = true;
 
         socket.on('pong', () => {
