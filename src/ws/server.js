@@ -1,10 +1,11 @@
 import { WebSocketServer } from "ws";
 import { WebSocket } from "ws";
+import { wsArcjet } from "../arcjet.js";
 
 /**
- * Sends the given payload as a JSON-formatted message over the WebSocket if the socket is open.
- * @param {WebSocket} socket - The target WebSocket; message is sent only when its readyState is WebSocket.OPEN.
- * @param {*} payload - Value to be JSON-stringified and transmitted.
+ * Send a JavaScript value as a JSON-encoded message over a WebSocket if the socket is open.
+ * @param {WebSocket} socket - The WebSocket to send the message on.
+ * @param {*} payload - The value to JSON-encode and send.
  */
 function sendJSON(socket, payload) {
     if (socket.readyState !== WebSocket.OPEN) return;
@@ -32,10 +33,9 @@ function broadcast(wss, payload) {
 }
 
 /**
- * Attaches a WebSocketServer to an existing HTTP server and exposes a helper to broadcast match creation events.
- *
- * @param {import('http').Server} server - HTTP server to attach the WebSocketServer to.
- * @returns {{ broadCastMatchCreated: (match: any) => void }} An object with a `broadCastMatchCreated(match)` method that broadcasts a `match_created` event with the provided match data to all connected WebSocket clients.
+ * Attach a WebSocket server to the provided HTTP server and manage client connections and heartbeat.
+ * @param {import('http').Server} server - HTTP server to bind the WebSocket server to.
+ * @returns {{ broadCastMatchCreated: (match: any) => void }} An object exposing `broadCastMatchCreated(match)`, which broadcasts a `match_created` message with `match` as payload to all connected clients.
  */
 export function attachWebSocketServer(server) {
     const wss = new WebSocketServer({
@@ -44,7 +44,26 @@ export function attachWebSocketServer(server) {
         maxPayload: 1024 * 1024
     });
 
-    wss.on('connection', (socket) => {
+    wss.on('connection', async (socket,request) => {
+
+        if(wsArcjet){
+            try{
+                const decision = await wsArcjet.protect(request);
+
+                if (decision.isDenied) {
+                    const reason = decision.reason.isRateLimit() ? 'Rate limit exceeded' : 'Access denied';
+                    const code = decision.reason.isRateLimit() ? 1013 : 1008; // Custom close codes
+
+                    socket.close(code, reason);
+                    return;
+                }
+
+            }catch(err){
+                console.error("WS connection error:", err);
+                socket.close(1011, 'Server security error');
+                return;
+            }
+        }
         socket.isAlive = true;
 
         socket.on('pong', () => {
