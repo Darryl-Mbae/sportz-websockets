@@ -1,6 +1,6 @@
 import { WebSocketServer } from "ws";
 import { WebSocket } from "ws";
-import { wspArcjet } from "../arcjet.js";
+import { wsArcjet } from "../arcjet.js";
 
 function sendJSON(socket, payload) {
     if (socket.readyState !== WebSocket.OPEN) return;
@@ -26,12 +26,12 @@ export function attachWebSocketServer(server) {
 
     wss.on('connection', async (socket) => {
 
-        if(wspArcjet){
+        if(wsArcjet){
             try{
-                const decision = await wspArcjet.protect(socket);
+                const decision = await wsArcjet.protect(socket);
 
                 if (decision.isDenied) {
-                    const reason = decision.reason.isRateLimit() ? 'Rate limite exceeded' : 'Access denied';
+                    const reason = decision.reason.isRateLimit() ? 'Rate limit exceeded' : 'Access denied';
                     const code = decision.reason.isRateLimit() ? 1013 : 1008; // Custom close codes
 
                     socket.close(code, reason);

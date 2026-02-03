@@ -14,13 +14,13 @@ const server = http.createServer(app);
 
 // JSON middleware
 app.use(express.json());
+app.use(securityMiddleware());
 
 // Simple route that returns a short message
 app.get('/', (req, res) => {
 	res.json({ message: 'Hello from Express!' });
 });
 
-app.use(securityMiddleware());
 app.use('/matches',matchRouter);
 
 const { broadCastMatchCreated } = attachWebSocketServer(server);
