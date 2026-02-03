@@ -24,17 +24,18 @@ export function attachWebSocketServer(server) {
         maxPayload: 1024 * 1024
     });
 
-    wss.on('connection', async (socket) => {
+    wss.on('connection', async (socket,request) => {
 
         if(wsArcjet){
             try{
-                const decision = await wsArcjet.protect(socket);
+                const decision = await wsArcjet.protect(request);
 
                 if (decision.isDenied) {
                     const reason = decision.reason.isRateLimit() ? 'Rate limit exceeded' : 'Access denied';
                     const code = decision.reason.isRateLimit() ? 1013 : 1008; // Custom close codes
 
                     socket.close(code, reason);
+                    return;
                 }
 
             }catch(err){
