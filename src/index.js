@@ -3,6 +3,7 @@ import { matchRouter } from './routes/matches.js';
 import http from 'http';
 import { attachWebSocketServer } from './ws/server.js';
 import { securityMiddleware } from './arcjet.js';
+import { commentaryRouter } from './routes/commentary.js';
 
 
 const port = Number(process.env.PORT || 8000) ;
@@ -22,9 +23,11 @@ app.get('/', (req, res) => {
 });
 
 app.use('/matches',matchRouter);
+app.use('/matches/:id/commentary',commentaryRouter);
 
-const { broadCastMatchCreated } = attachWebSocketServer(server);
-app.locals.broadCastMatchCreated= broadCastMatchCreated;
+const { broadcastMatchCreated, broadcastCommentary } = attachWebSocketServer(server);
+app.locals.broadcastMatchCreated = broadcastMatchCreated;
+app.locals.broadcastCommentary = broadcastCommentary;
 
 
 // Start server and log the full URL
